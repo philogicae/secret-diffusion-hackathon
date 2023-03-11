@@ -1,11 +1,13 @@
 let connected = false;
-let defaultWalletAddress = "Please connect to Metamask"
+let defaultWalletAddress = "Please connect to Metamask";
 walletAddress.textContent = defaultWalletAddress;
 
 if (typeof window.ethereum !== "undefined") {
   const connectButton = document.getElementById("connect-button");
+  const afterConnectButtons = document.getElementById("after-connect-buttons");
+  afterConnectButtons.style.visibility = "hidden";
 
-  const connect = () => {
+  const connect = async() => {
     window.ethereum
       .request({ method: "eth_requestAccounts" })
       .then((accounts) => {
@@ -15,13 +17,14 @@ if (typeof window.ethereum !== "undefined") {
         connectButton.classList.add("connected");
         connected = true;
         walletAddress.textContent = "Connected to: " + selectedAccount;
+        afterConnectButtons.style.visibility = "visible";
       })
       .catch((error) => {
         console.log("MetaMask wallet access denied:", error);
       });
   };
 
-  const disconnect = () => {
+  const disconnect = async() => {
     window.ethereum
       .send("eth_chainId", [])
       .then(() => {
@@ -29,6 +32,7 @@ if (typeof window.ethereum !== "undefined") {
         connectButton.classList.remove("connected");
         connected = false;
         walletAddress.textContent = defaultWalletAddress
+        afterConnectButtons.style.visibility = "hidden";
       })
       .catch((error) => {
         console.log("Error disconnecting wallet:", error);
@@ -39,9 +43,10 @@ if (typeof window.ethereum !== "undefined") {
     if (connected) {
       disconnect();
     } else {
-      connect();      
+      connect();
     }
   });
 } else {
   console.log("Wallet extension not installed.");
+
 }

@@ -29,6 +29,20 @@ button {
   cursor: pointer;
 }
 
+.button-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.button-container button {
+  display: inline-block;
+  width: 150px;
+  height: 7vh; /* set height to 50% of viewport height */
+  margin: 0 10px;
+  font-size: 16px;
+}
+
 button:hover {
   box-shadow: 0 0 20px #800080;
 }
@@ -37,6 +51,14 @@ button.connected {
   background-color: #800080;
   color: #ffffff;
   box-shadow: none;
+}
+
+.after-connect-buttons {
+  visibility: hidden;
+}
+
+.after-connect-buttons2 {
+  visibility: hidden;
 }
 
 h4 {
