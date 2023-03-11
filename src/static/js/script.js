@@ -7,6 +7,19 @@ if (typeof window.ethereum !== "undefined") {
   const afterConnectButtons = document.getElementById("after-connect-buttons");
   afterConnectButtons.style.visibility = "hidden";
 
+  // on loading: 
+  window.ethereum
+    .request({ method: "eth_requestAccounts" })
+    .then((accounts) => {
+        const selectedAccount = accounts[0];
+        console.log(selectedAccount);
+        connected = true;
+        connectButton.textContent = "Connected";
+        connectButton.classList.add("connected");        
+        walletAddress.textContent = "Connected to: " + selectedAccount;
+        afterConnectButtons.style.visibility = "visible";
+    })
+
   const connect = async() => {
     window.ethereum
       .request({ method: "eth_requestAccounts" })
