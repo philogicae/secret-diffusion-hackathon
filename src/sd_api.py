@@ -1,3 +1,4 @@
+import os
 from requests import packages, post
 from rich import print
 from io import BytesIO
@@ -25,6 +26,7 @@ class SD_API:
         self.ip = ip
         self.txt2img = f"{self.ip}/sdapi/v1/txt2img"
         self.png_info = f"{self.ip}/sdapi/v1/png-info"
+        os.makedirs(self.OUTPUT_DIR, exist_ok=True)
 
     def _call(self, url, payload):
         r = post(url, json=payload, verify=False)
