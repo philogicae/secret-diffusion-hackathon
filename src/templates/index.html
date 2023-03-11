@@ -14,24 +14,16 @@
     <img src="static/images/logo.png" alt="Logo" />
     <h1>Secret Diffusion</h1>
     <button id="connect-button">Connect Wallet</button>
-    <h4 id="walletAddress">
-      </h3>
+    <h4 id="walletAddress"></h4>
       <div id="after-connect-buttons">
         <div class="button-container" id="group1">
           <button id="create-secret-button">Create Secret</button>
-          <button id="view-secret">View my collection</button>
-        </div>
-
-        <div class="button-container" id="group2">
-          <button id="transfer-secret">Transfer</button>
-          <button id="sell-secret">Sell</button>
+          <a href="/view-collection">
+            <button onclick="redirectToCollection()">View Collection</button>
+          </a>
         </div>
       </div>
-  </div>
-
-
-  </div>
-  <script type="text/javascript" src="static/js/script.js"></script>
+      <script type="text/javascript" src="static/js/script.js"></script>
 </body>
 
 </html>
