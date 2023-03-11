@@ -1,2 +1,6 @@
 Pillow
 rich
+requests
+cryptography
+secrets
+web3
