@@ -11,7 +11,7 @@ Image & Encryption:
 - Mint SBT
 
 Contract:
-- 1 original SBT (owner) + n fixed mintable 1 time
+- 1 original SBT (owner) + n fixed mintable NFTs
 - Metadata=
 • Id: Serial number (at mint)
 • Name: Secret nickname
@@ -40,9 +40,8 @@ Verify authenticity:
 - Metahash-> sbt-pk-> decrypt secret-> check image hashs
 
 Front: single page with web3 auth
-- Create SBT / Mint NFTs
-- Transfer / Distribution
-- Sell / Open secret
+- Create Secret
+- Transfer / Sell
 - View & Verify
 
 Back: flask with web3js lib on html
