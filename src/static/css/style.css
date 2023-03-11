@@ -28,3 +28,19 @@ button {
   border: none;
   cursor: pointer;
 }
+
+button:hover {
+  box-shadow: 0 0 20px #800080;
+}
+
+button.connected {
+  background-color: #800080;
+  color: #ffffff;
+  box-shadow: none;
+}
+
+h4 {
+  font-size: 1rem;
+  font-weight: 100;
+  margin-bottom: 1rem;
+}

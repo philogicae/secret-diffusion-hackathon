@@ -1,4 +1,6 @@
 let connected = false;
+let defaultWalletAddress = "Please connect to Metamask"
+walletAddress.textContent = defaultWalletAddress;
 
 if (typeof window.ethereum !== "undefined") {
   const connectButton = document.getElementById("connect-button");
@@ -10,7 +12,9 @@ if (typeof window.ethereum !== "undefined") {
         const selectedAccount = accounts[0];
         console.log(selectedAccount);
         connectButton.textContent = "Connected";
+        connectButton.classList.add("connected");
         connected = true;
+        walletAddress.textContent = "Connected to: " + selectedAccount;
       })
       .catch((error) => {
         console.log("MetaMask wallet access denied:", error);
@@ -22,18 +26,20 @@ if (typeof window.ethereum !== "undefined") {
       .send("eth_chainId", [])
       .then(() => {
         connectButton.textContent = "Connect Wallet";
+        connectButton.classList.remove("connected");
         connected = false;
+        walletAddress.textContent = defaultWalletAddress
       })
       .catch((error) => {
         console.log("Error disconnecting wallet:", error);
       });
   };
 
-  connectButton.addEventListener("click", () => {
+  connectButton.addEventListener("click", async () => {
     if (connected) {
       disconnect();
     } else {
-      connect();
+      connect();      
     }
   });
 } else {
