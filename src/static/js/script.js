@@ -46,7 +46,16 @@ if (typeof window.ethereum !== "undefined") {
       connect();
     }
   });
+
+
 } else {
   console.log("Wallet extension not installed.");
+}
 
+function redirectToCollection() {
+  window.location.href = "/view-collection";
+}
+
+function redirectToCreateSecret() {
+  window.location.href = "/create-secret";
 }
