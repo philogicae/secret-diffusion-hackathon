@@ -3,3 +3,4 @@ rich
 requests
 cryptography
 web3
+flask
