@@ -55,3 +55,7 @@ if (typeof window.ethereum !== "undefined") {
 function redirectToCollection() {
   window.location.href = "/view-collection";
 }
+
+function redirectToCreateSecret() {
+  window.location.href = "/create-secret";
+}
