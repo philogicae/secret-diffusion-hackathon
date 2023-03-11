@@ -1,7 +1,7 @@
 Secret:
-1. Simple: Msg + auto prompt v2.1 + extra
-2. Prompt: No msg + custom prompt + extra (ex: custom model)
-3. Complete: Msg + custom prompt + extra
+1. Simple: Msg + auto prompt v2.1
+2. Prompt: No msg + custom prompt
+3. Complete: Msg + custom prompt
 
 Image & Encryption:
 - Generate sbt keypair on back
