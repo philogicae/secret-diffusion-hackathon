@@ -1,6 +1,6 @@
+git+https://github.com/ethereum/web3.py.git@v6.0.0-beta.9#egg=web3
 Pillow
 rich
 requests
 cryptography
-web3
 flask
