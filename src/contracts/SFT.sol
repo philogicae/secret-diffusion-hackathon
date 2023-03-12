@@ -274,7 +274,7 @@ contract SFT is Context, ERC165, IERC1155, IERC1155MetadataURI {
             _holders[id][i] = creator;
         }
         _nbSecrets++;
-
+        _revealed[id][0] = true;
         emit SecretMinted(id, creator, amount, metahash);
     }
 
