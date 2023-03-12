@@ -294,31 +294,29 @@ contract SFT is Context, ERC165, IERC1155, IERC1155MetadataURI {
 
     function mint(uint256 amount, string memory metadata) external {
         require(amount > 0, "ERC1155: amount must be positive");
-        address creator = _msgSender()
+        address creator = _msgSender();
         uint256 id = _numSecrets;
         uint256 metahash = uint256(
-            sha256(
-                abi.encodePacked(id, creator, amount, metadata)
-            )
+            sha256(abi.encodePacked(id, creator, amount, metadata))
         );
 
         // Create SecretBoxes
         mapping(uint256 => SecretBox) creatorBoxes = new mapping(uint256 => SecretBox)();
         mapping(uint256 => SecretBox) boxes = new mapping(uint256 => SecretBox)();
-        SecretBox storage first = new SecretBox(0, creator, true)
+        SecretBox storage first = new SecretBox(0, creator, true);
         creatorBoxes[0] = first;
         boxes[0] = first;
         for (uint256 i = 1; i < amount; i++) {
-            SecretBox storage next = new SecretBox(i, creator, false)
+            SecretBox storage next = new SecretBox(i, creator, false);
             creatorBoxes[i] = next;
             boxes[i] = next;
         }
-    
+
         // Create SecretHolder
         SecretHolder storage holder = new SecretHolder(amount, creatorBoxes);
         // Create SecretHolders
         mapping(address => SecretHolder) holders = new mapping(address => SecretHolder)();
-        holders[creator] = holder
+        holders[creator] = holder;
 
         // Create Secret
         Secret storage secret = new Secret(
@@ -345,19 +343,21 @@ contract SFT is Context, ERC165, IERC1155, IERC1155MetadataURI {
         if (id_ == 0) {
             id_ = secretId;
         }
-        SecretBox secretBox = _secrets[id_].boxes[boxId];
+        SecretBox memory secretBox = _secrets[id_].boxes[boxId];
         require(secretBox == sender, "ERC1155: caller is not the holder");
         require(secretBox.revealed == false, "ERC1155: box already opened");
         secretBox.revealed = true;
-        emit SecretOpened(secretId, from, boxId, metahash);
+        emit SecretOpened(secretId, sender, boxId, _secrets[id_].metahash);
     }
 
-    function isOpen(uint256 secretId, uint256 boxId) public view returns (bool) {
+    function isOpen(
+        uint256 secretId,
+        uint256 boxId
+    ) public view returns (bool) {
         uint256 id_ = _metahashs[secretId];
         if (id_ == 0) {
             id_ = secretId;
         }
-        SecretBox secretBox = _secrets[id_].boxes[boxId];
-        return secretBox.revealed;
+        return _secrets[id_].boxes[boxId].revealed;
     }
 }
