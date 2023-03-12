@@ -1,8 +1,27 @@
 let connected = false;
 let stableDiffusionLink = "";
+let secret = "";
+let inputPrompt = "";
+let amount = 1;
+
+let hasStableDiffusionLink = false;
+let hasSecret = false;
+let hasPrompt = false;
+let hasAmount = false;
+
 const walletAddress = document.getElementById("walletAddress");
-const sdUrlInput = document.getElementById("sd-url-input");
-const submitBtn = document.getElementById("submit-btn");
+let sdUrlInput = document.getElementById("sd-url-input");
+let secretInput = document.getElementById("secret-input");
+let promptInput = document.getElementById("prompt-input");
+let amountInput = document.getElementById("amount-input");
+let sdBtn = document.getElementById("sd-btn");
+let secretBtn = document.getElementById("secret-btn");
+let promptBtn = document.getElementById("prompt-btn");
+let amountBtn = document.getElementById("amount-btn");
+let numberNftBtn = document.getElementById("number-nft-btn");
+
+let generateImageBtn = document.getElementById("generate-image-btn");
+generateImageBtn.disabled = true; // disable the button initially
 
 window.ethereum
     .request({ method: "eth_requestAccounts" })
@@ -15,16 +34,102 @@ window.ethereum
 
 function handleSDUrl() {
     stableDiffusionLink = sdUrlInput.value;
-    if (stableDiffusionLink) {
+    if (stableDiffusionLink.length > 0) {
+        hasStableDiffusionLink = true;
+    }
+
+    if (hasStableDiffusionLink) {
         console.log(`StableDiffusion instance URL is: ${stableDiffusionLink}`);
         sdUrlInput.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-check"></i> URL saved';
-        submitBtn.classList.add("success");
-        // LOGIC TO CREATE NFT
+        sdBtn.innerHTML = '<i class="fas fa-check"></i> URL saved';
+        sdBtn.classList.add("success");
+        enableGenerateImageBtn();
     } else {
         console.log("Please enter a valid StableDiffusion instance URL.");
     }
 }
+
+function handleSecret() {
+    secret = secretInput.value;
+    if (secret.length > 0) {
+        hasSecret = true;
+    }
+
+    if (hasSecret) {
+        console.log(`Secret is: ${secret}`);
+        secretInput.disabled = true;
+        secretBtn.innerHTML = '<i class="fas fa-check"></i> Secret saved';
+        secretBtn.classList.add("success");
+        enableGenerateImageBtn();
+    } else {
+        console.log("Please enter a valid secret.");
+    }
+
+}
+
+function handlePrompt() {
+    inputPrompt = promptInput.value;
+    hasPrompt = true;
+    console.log(`Prompt is: ${inputPrompt}`);
+    promptInput.disabled = true;
+    promptBtn.innerHTML = '<i class="fas fa-check"></i> Prompt saved';
+    promptBtn.classList.add("success");
+    enableGenerateImageBtn();
+}
+
+function handleAmount() {
+    let strAmount = amountInput.value;
+    if (strAmount == NaN || strAmount == "") {
+        strAmount = 0;
+    }
+    let intAmount = parseInt(strAmount);
+    amount = intAmount + 1;
+    hasAmount = true;
+    console.log(`Amount is: ${amount}`);
+    amountInput.disabled = true;
+    amountBtn.innerHTML = '<i class="fas fa-check"></i> Amount saved';
+    amountBtn.classList.add("success");
+    enableGenerateImageBtn();
+}
+
+
+function handleGenerateImage() {
+    // Your generate image code goes here
+    fetch('/generate-image?stableDiffusionLink=' + stableDiffusionLink + '&secret=' + secret + '&prompt=' + inputPrompt + '&amount=' + amount)
+        .then(response => {
+            if (response.ok) {
+                console.log(response);
+                return response.json();
+            } else {
+                throw new Error('Error generating image.');
+            }
+        })
+        .then(data => {
+            console.log(data);
+            // handle the response data here
+        })
+        .catch(error => {
+            console.error('Error generating image:', error);
+        });
+}
+
+function enableGenerateImageBtn() {
+    if (hasStableDiffusionLink && hasSecret && hasPrompt && hasAmount) {
+        generateImageBtn.disabled = false; // enable the button
+        generateImageBtn.innerHTML = "Generate AI Image"; // Set the button text
+    } else {
+        generateImageBtn.disabled = true; // disable the button
+        generateImageBtn.innerHTML = "Please fill in all inputs"; // Set the button text
+    }
+}
+
+// Call the function initially to set the state of the button
+enableGenerateImageBtn();
+
+
+// Add the click event listener to the button
+generateImageBtn.addEventListener("click", handleGenerateImage);
+
 
 if (!connected) {
     walletAddress.textContent = "Please return to Home page and connect to Metamask";

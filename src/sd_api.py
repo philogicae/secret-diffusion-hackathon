@@ -1,4 +1,5 @@
 import os
+import random
 from requests import packages, post
 from rich import print
 from io import BytesIO
@@ -10,7 +11,9 @@ packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
 class SD_API:
     OUTPUT_DIR = "src/output"
-    DEFAULT_PROMPT = prompt = dict(
+    RANDOM_WORD_LIST = ["Paris", "Cat", "Computer",
+                        "Hackathon Winner", "Dog", "Trophy", "Bucharest"]
+    DEFAULT_PROMPT = dict(
         prompt="(logo of bitcoin:1.2), pixel art, design, 8k, hdr",
         negative_prompt="out of frame, blurry, low res",
         width=256,
@@ -35,6 +38,34 @@ class SD_API:
             return r.json()
         else:
             raise Exception("Error: {}".format(r.status_code))
+
+    def autoprompt(self):
+        new = self.DEFAULT_PROMPT.copy()
+        seed = random.randint(1000000, 10000000)
+        word = self.RANDOM_WORD_LIST[seed % len(self.RANDOM_WORD_LIST)]
+        new["prompt"] = f"(logo of {word}:1.2), pixel art, design, 8k, hdr"
+        new['seed'] = seed
+        print(new)
+        return new
+
+    def parse_prompt(self, prompt_string):
+        if (not prompt_string):
+            return self.autoprompt()
+
+        prompt_parts = prompt_string.split("\n")
+        prompt_dict = dict(prompt=prompt_parts[0])
+        if len(prompt_parts) > 1:
+            prompt_dict["negative_prompt"] = prompt_parts[1]
+
+        prompt_dict["width"], prompt_dict["height"] = prompt_parts[-1].split(
+            ":")[-1].split("x")
+
+        for part in prompt_parts[2:-1]:
+            key, val = part.split(":")
+            prompt_dict[key.strip().replace(" ", "_").lower()
+                        ] = float(val.strip())
+        prompt_dict["n_iter"] = 1
+        return prompt_dict
 
     def generate(self, prompt_data={}, n=1):
         prompt = self.DEFAULT_PROMPT | prompt_data | dict(n_iter=n)

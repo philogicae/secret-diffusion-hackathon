@@ -1,4 +1,6 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
+
+from sd_api import SD_API
 
 app = Flask(__name__)
 
@@ -14,6 +16,17 @@ def view_collection():
 @app.route('/create-secret')
 def create_secret():
     return render_template('create-secret.html')
+
+@app.route('/generate-image')
+def generate_image():
+    stable_diffusion_link = request.args.get('stableDiffusionLink')
+    prompt = request.args.get('prompt')
+    api = SD_API(stable_diffusion_link)
+    print('Formatting prompt...')
+    formatted_prompt = api.parse_prompt(prompt);
+    print('Generating image...')
+    api.generate(formatted_prompt)
+    return "Image generated successfully."
 
 
 if __name__ == '__main__':
