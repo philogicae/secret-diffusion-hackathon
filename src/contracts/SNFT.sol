@@ -11,18 +11,6 @@ import "./ERC1155/dependencies/ERC165.sol";
 
 contract SFT is Context, ERC165, IERC1155, IERC1155MetadataURI {
     using Address for address;
-    mapping(address => mapping(address => bool)) private _operatorApprovals;
-
-    struct SecretBox {
-        uint256 id;
-        address owner;
-        bool revealed;
-    }
-
-    struct SecretHolder {
-        uint256 balance;
-        mapping(uint256 => SecretBox) boxes;
-    }
 
     struct Secret {
         uint256 id;
@@ -30,25 +18,27 @@ contract SFT is Context, ERC165, IERC1155, IERC1155MetadataURI {
         uint256 supply; // number of NFTs
         string metadata; // ipfs link
         uint256 metahash; // sha256 of secretId, creator, supply, and metadata
-        mapping(uint256 => SecretBox) boxes; // map of NFT ids to boxes
-        mapping(address => SecretHolder) holders; // map of NFT holders
     }
 
-    mapping(uint256 => uint256) private _metahashs; // metahash to secretId
-    mapping(uint256 => Secret) private _secrets; // secretId to secret
-    uint256 private _numSecrets; // numbers of secrets
     string private _uri;
+    uint256 private _nbSecrets; // number of secrets
+    mapping(uint256 => uint256) private _metahashsToIds; // metahash -> secretId
+    mapping(uint256 => Secret) private _secrets; // secretId -> secret
+    mapping(uint256 => mapping(uint256 => address)) private _holders; // secretId -> boxId -> owner
+    mapping(uint256 => mapping(uint256 => bool)) private _revealed; // secretId -> boxId -> revealed
+    mapping(uint256 => mapping(address => uint256)) private _balances; // secretId -> owner -> balance
+    mapping(address => mapping(address => bool)) private _operatorApprovals; // owner -> operator -> approved
 
     event SecretMinted(
-        address indexed secretId,
-        uint256 indexed creator,
+        uint256 indexed secretId,
+        address indexed creator,
         uint256 amount,
         uint256 metahash
     );
 
     event SecretOpened(
-        address indexed secretId,
-        uint256 indexed from,
+        uint256 indexed secretId,
+        address indexed from,
         uint256 boxId,
         uint256 metahash
     );
@@ -56,10 +46,7 @@ contract SFT is Context, ERC165, IERC1155, IERC1155MetadataURI {
     constructor() {}
 
     function uri(uint256 id) public view override returns (string memory) {
-        uint256 id_ = _metahashs[id];
-        if (id_ == 0) {
-            id_ = id;
-        }
+        uint256 id_ = getAnyId(id);
         return _secrets[id_].metadata;
     }
 
@@ -72,15 +59,17 @@ contract SFT is Context, ERC165, IERC1155, IERC1155MetadataURI {
             super.supportsInterface(interfaceId);
     }
 
+    function getAnyId(uint256 id) public view returns (uint256) {
+        uint256 id_ = _metahashsToIds[id];
+        return id_ == 0 ? id : id_;
+    }
+
     function balanceOf(
         address account,
         uint256 id
     ) public view override returns (uint256) {
-        uint256 id_ = _metahashs[id];
-        if (id_ == 0) {
-            id_ = id;
-        }
-        return _secrets[id_].holders[account].balance;
+        uint256 id_ = getAnyId(id);
+        return _balances[id_][account];
     }
 
     function balanceOfBatch(
@@ -93,11 +82,7 @@ contract SFT is Context, ERC165, IERC1155, IERC1155MetadataURI {
         );
         uint256[] memory batchBalances = new uint256[](accounts.length);
         for (uint256 i = 0; i < accounts.length; i++) {
-            uint256 id_ = _metahashs[ids[i]];
-            if (id_ == 0) {
-                id_ = ids[i];
-            }
-            batchBalances[i] = _secrets[id_].holders[accounts[i]].balance;
+            batchBalances[i] = _balances[getAnyId(ids[i])][accounts[i]];
         }
         return batchBalances;
     }
@@ -138,6 +123,9 @@ contract SFT is Context, ERC165, IERC1155, IERC1155MetadataURI {
             "ERC1155: caller is not token owner nor approved"
         );
         _safeTransferFrom(from, to, id, amount, data);
+        address operator = _msgSender();
+        emit TransferSingle(operator, from, to, id, amount);
+        _doSafeTransferAcceptanceCheck(operator, from, to, id, amount, data);
     }
 
     function _safeTransferFrom(
@@ -148,47 +136,25 @@ contract SFT is Context, ERC165, IERC1155, IERC1155MetadataURI {
         bytes memory data
     ) internal {
         require(to != address(0), "ERC1155: transfer to the zero address");
-        address operator = _msgSender();
-        uint256 id_ = _metahashs[id];
-        if (id_ == 0) {
-            id_ = id;
-        }
-        Secret memory secret = _secrets[id_];
-        SecretHolder memory fromHolder = secret.holders[from];
-        if (secret.holders[to].balance == 0) {
-            secret.holders[to] = SecretHolder(
-                0,
-                new mapping(uint256 => SecretBox)()
-            );
-        }
-        SecretHolder memory toHolder = secret.holders[to];
-        uint256 fromBalance = fromHolder.balance;
+        uint256 id_ = getAnyId(id);
         require(
-            fromBalance >= amount,
-            "ERC1155: insufficient balance for transfer"
+            _balances[id_][from] >= amount,
+            "ERC1155: insufficient balance"
         );
-
-        uint256 transferedBoxes = 0;
-        for (uint256 i = fromBalance - 1; i >= 0; i--) {
-            SecretBox memory box = fromHolder.boxes[i];
-            if (box.revealed == false) {
-                box.owner = to;
-                fromHolder.balance -= 1;
-                fromHolder.boxes[i] = 0;
-                toHolder.boxes[toHolder.balance] = box;
-                toHolder.balance += 1;
-                transferedBoxes++;
+        uint256 transfered = 0;
+        for (uint256 i = 0; i < _secrets[id_].supply; i++) {
+            if (_holders[id_][i] == from && !_revealed[id_][i]) {
+                _holders[id_][i] = to;
+                _balances[id_][from]--;
+                _balances[id_][to]++;
+                transfered++;
             }
+            if (transfered == amount) break;
         }
         require(
-            transferedBoxes == amount,
+            transfered != amount,
             "ERC1155: not enough sealed boxes for transfer"
         );
-        if (fromHolder.balance == 0) {
-            delete secret.holders[from];
-        }
-        emit TransferSingle(operator, from, to, id, amount);
-        _doSafeTransferAcceptanceCheck(operator, from, to, id, amount, data);
     }
 
     function safeBatchTransferFrom(
@@ -203,6 +169,16 @@ contract SFT is Context, ERC165, IERC1155, IERC1155MetadataURI {
             "ERC1155: caller is not token owner nor approved"
         );
         _safeBatchTransferFrom(from, to, ids, amounts, data);
+        address operator = _msgSender();
+        emit TransferBatch(operator, from, to, ids, amounts);
+        _doSafeBatchTransferAcceptanceCheck(
+            operator,
+            from,
+            to,
+            ids,
+            amounts,
+            data
+        );
     }
 
     function _safeBatchTransferFrom(
@@ -217,19 +193,9 @@ contract SFT is Context, ERC165, IERC1155, IERC1155MetadataURI {
             "ERC1155: ids and amounts length mismatch"
         );
         require(to != address(0), "ERC1155: transfer to the zero address");
-        address operator = _msgSender();
         for (uint256 i = 0; i < ids.length; i++) {
-            safeTransferFrom(from, to, ids[i], amounts[i], data);
+            _safeTransferFrom(from, to, ids[i], amounts[i], data);
         }
-        emit TransferBatch(operator, from, to, ids, amounts);
-        _doSafeBatchTransferAcceptanceCheck(
-            operator,
-            from,
-            to,
-            ids,
-            amounts,
-            data
-        );
     }
 
     function _doSafeTransferAcceptanceCheck(
@@ -295,61 +261,32 @@ contract SFT is Context, ERC165, IERC1155, IERC1155MetadataURI {
     function mint(uint256 amount, string memory metadata) external {
         require(amount > 0, "ERC1155: amount must be positive");
         address creator = _msgSender();
-        uint256 id = _numSecrets;
+        uint256 id = _nbSecrets;
         uint256 metahash = uint256(
             sha256(abi.encodePacked(id, creator, amount, metadata))
         );
 
-        // Create SecretBoxes
-        mapping(uint256 => SecretBox)
-            storage creatorBoxes = new mapping(uint256 => SecretBox)();
-        mapping(uint256 => SecretBox)
-            storage boxes = new mapping(uint256 => SecretBox)();
-        SecretBox storage first = new SecretBox(0, creator, true);
-        creatorBoxes[0] = first;
-        boxes[0] = first;
-        for (uint256 i = 1; i < amount; i++) {
-            SecretBox storage next = new SecretBox(i, creator, false);
-            creatorBoxes[i] = next;
-            boxes[i] = next;
-        }
-
-        // Create SecretHolder
-        SecretHolder storage holder = new SecretHolder(amount, creatorBoxes);
-        // Create SecretHolders
-        mapping(address => SecretHolder)
-            storage holders = new mapping(address => SecretHolder)();
-        holders[creator] = holder;
-
         // Create Secret
-        Secret storage secret = new Secret(
-            id,
-            creator,
-            amount,
-            metadata,
-            metahash,
-            boxes,
-            holders
-        );
-
-        // Add to maps
-        _metahashs[metahash] = id;
-        _secrets[id] = secret;
-        _numSecrets++;
+        _metahashsToIds[metahash] = id;
+        _secrets[id] = Secret(id, creator, amount, metadata, metahash);
+        _balances[id][creator] = amount;
+        for (uint256 i = 0; i < amount; i++) {
+            _holders[id][i] = creator;
+        }
+        _nbSecrets++;
 
         emit SecretMinted(id, creator, amount, metahash);
     }
 
     function open(uint256 secretId, uint256 boxId) external {
         address sender = _msgSender();
-        uint256 id_ = _metahashs[secretId];
-        if (id_ == 0) {
-            id_ = secretId;
-        }
-        SecretBox memory secretBox = _secrets[id_].boxes[boxId];
-        require(secretBox == sender, "ERC1155: caller is not the holder");
-        require(secretBox.revealed == false, "ERC1155: box already opened");
-        secretBox.revealed = true;
+        uint256 id_ = getAnyId(secretId);
+        require(
+            _holders[id_][boxId] == sender,
+            "ERC1155: caller is not the holder"
+        );
+        require(!_revealed[id_][boxId], "ERC1155: box already opened");
+        _revealed[id_][boxId] = true;
         emit SecretOpened(secretId, sender, boxId, _secrets[id_].metahash);
     }
 
@@ -357,10 +294,6 @@ contract SFT is Context, ERC165, IERC1155, IERC1155MetadataURI {
         uint256 secretId,
         uint256 boxId
     ) public view returns (bool) {
-        uint256 id_ = _metahashs[secretId];
-        if (id_ == 0) {
-            id_ = secretId;
-        }
-        return _secrets[id_].boxes[boxId].revealed;
+        return _revealed[getAnyId(secretId)][boxId];
     }
 }
