@@ -3,11 +3,13 @@ let stableDiffusionLink = "";
 let secret = "";
 let inputPrompt = "";
 let amount = 1;
+let generatedImage;
 
 let hasStableDiffusionLink = false;
 let hasSecret = false;
 let hasPrompt = false;
 let hasAmount = false;
+let hasGeneratedImage = false;
 
 const walletAddress = document.getElementById("walletAddress");
 let sdUrlInput = document.getElementById("sd-url-input");
@@ -22,6 +24,8 @@ let numberNftBtn = document.getElementById("number-nft-btn");
 
 let generateImageBtn = document.getElementById("generate-image-btn");
 generateImageBtn.disabled = true; // disable the button initially
+
+const imageElement = document.getElementById("myImage");
 
 window.ethereum.request({ method: "eth_requestAccounts" }).then((accounts) => {
   const selectedAccount = accounts[0];

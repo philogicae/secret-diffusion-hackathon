@@ -68,13 +68,17 @@ class SD_API:
     def generate(self, prompt_data=DEFAULT_PROMPT):
         prompt = self.DEFAULT_PROMPT | prompt_data
         resp = self._call(self.txt2img, prompt)
+        imgs=[]
         for i, data in enumerate(resp['images']):
             img = Image.open(BytesIO(b64decode(data.split(",", 1)[0])))
             img.save(f'{self.OUTPUT_DIR}/img-{i+1}.jpg')
-            self.metadata(data, header=f"{i+1}/{len(resp['images'])}:")
+            metadata = self.metadata(data, header=f"{i+1}/{len(resp['images'])}:")
+            imgs[i] = dict(img=img, prompt=metadata)
+        return imgs # [ {'img': img, 'prompt': metadata}, ... ]
 
     def metadata(self, data, header=''):
         png_payload = dict(image="data:image/png;base64," + data)
         resp = self._call(self.png_info, png_payload)
         metadata = resp.get("info")
         print(header, metadata)
+        return metadata
