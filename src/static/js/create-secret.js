@@ -119,7 +119,7 @@ function handleMint() {
 function enableMintBtn() {
   if (hasStableDiffusionLink && hasSecret && hasPrompt && hasAmount) {
     mintBtn.disabled = false; // enable the button
-    mintBtn.innerHTML = "Generate AI Image"; // Set the button text
+    mintBtn.innerHTML = "Mint NFTs"; // Set the button text
   } else {
     mintBtn.disabled = true; // disable the button
     mintBtn.innerHTML = "Please fill in all inputs"; // Set the button text
