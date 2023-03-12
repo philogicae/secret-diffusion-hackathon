@@ -99,17 +99,10 @@ function handleGenerateImage() {
         .then(response => {
             if (response.ok) {
                 console.log(response);
-                return response.json();
+                return response;
             } else {
                 throw new Error('Error generating image.');
             }
-        })
-        .then(data => {
-            console.log(data);
-            // handle the response data here
-        })
-        .catch(error => {
-            console.error('Error generating image:', error);
         });
 }
 
@@ -125,11 +118,6 @@ function enableGenerateImageBtn() {
 
 // Call the function initially to set the state of the button
 enableGenerateImageBtn();
-
-
-// Add the click event listener to the button
-generateImageBtn.addEventListener("click", handleGenerateImage);
-
 
 if (!connected) {
     walletAddress.textContent = "Please return to Home page and connect to Metamask";

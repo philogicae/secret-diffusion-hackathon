@@ -11,7 +11,7 @@ packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
 class SD_API:
     OUTPUT_DIR = "src/output"
-    RANDOM_WORD_LIST = ["Paris", "Cat", "Computer",
+    RANDOM_WORD_LIST = ["Paris", "Cat", "Ballerina",
                         "Hackathon Winner", "Dog", "Trophy", "Bucharest"]
     DEFAULT_PROMPT = dict(
         prompt="(logo of bitcoin:1.2), pixel art, design, 8k, hdr",
@@ -43,7 +43,7 @@ class SD_API:
         new = self.DEFAULT_PROMPT.copy()
         seed = random.randint(1000000, 10000000)
         word = self.RANDOM_WORD_LIST[seed % len(self.RANDOM_WORD_LIST)]
-        new["prompt"] = f"(logo of {word}:1.2), pixel art, design, 8k, hdr"
+        new["prompt"] = f"(photography of {word}:1.2), realist, art, 50mm, design, 8k, hdr"
         new['seed'] = seed
         print(new)
         return new
