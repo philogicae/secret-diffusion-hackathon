@@ -28,7 +28,7 @@ contract SFT is Context, ERC165, IERC1155, IERC1155MetadataURI {
         uint256 id;
         address creator;
         uint256 supply; // number of NFTs
-        uint256 metadata; // ipfs link
+        string metadata; // ipfs link
         uint256 metahash; // sha256 of secretId, creator, supply, and metadata
         mapping(uint256 => SecretBox) boxes; // map of NFT ids to boxes
         mapping(address => SecretHolder) holders; // map of NFT holders

@@ -58,9 +58,7 @@ abstract contract ERC1155Supply is ERC1155 {
                     supply >= amount,
                     "ERC1155: burn amount exceeds totalSupply"
                 );
-                unchecked {
-                    _totalSupply[id] = supply - amount;
-                }
+                _totalSupply[id] = supply - amount;
             }
         }
     }
