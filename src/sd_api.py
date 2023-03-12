@@ -26,7 +26,7 @@ class SD_API:
     )
 
     def __init__(self, ip):
-        self.ip = ip
+        self.ip = ip[:-1] if ip[-1] == "/" else ip
         self.txt2img = f"{self.ip}/sdapi/v1/txt2img"
         self.png_info = f"{self.ip}/sdapi/v1/png-info"
         os.makedirs(self.OUTPUT_DIR, exist_ok=True)
