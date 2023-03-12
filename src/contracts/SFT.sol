@@ -152,7 +152,7 @@ contract SFT is Context, ERC165, IERC1155, IERC1155MetadataURI {
             if (transfered == amount) break;
         }
         require(
-            transfered != amount,
+            transfered == amount,
             "ERC1155: not enough sealed boxes for transfer"
         );
     }
@@ -295,5 +295,24 @@ contract SFT is Context, ERC165, IERC1155, IERC1155MetadataURI {
         uint256 boxId
     ) public view returns (bool) {
         return _revealed[getAnyId(secretId)][boxId];
+    }
+
+    function getNbSecrets() public view returns (uint256) {
+        return _nbSecrets;
+    }
+
+    function getIdFromMetahash(uint256 metahash) public view returns (uint256) {
+        return _metahashsToIds[metahash];
+    }
+
+    function getSecret(uint256 secretId) public view returns (Secret memory) {
+        return _secrets[getAnyId(secretId)];
+    }
+
+    function getHolder(
+        uint256 secretId,
+        uint256 boxId
+    ) public view returns (address) {
+        return _holders[getAnyId(secretId)][boxId];
     }
 }
