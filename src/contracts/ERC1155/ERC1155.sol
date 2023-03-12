@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts (last updated v4.6.0) (token/ERC1155/ERC1155.sol)
 
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.0;
 
 import "./IERC1155.sol";
 import "./IERC1155Receiver.sol";
@@ -191,7 +191,9 @@ contract ERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI {
             fromBalance >= amount,
             "ERC1155: insufficient balance for transfer"
         );
-        _balances[id][from] = fromBalance - amount;
+        unchecked {
+            _balances[id][from] = fromBalance - amount;
+        }
         _balances[id][to] += amount;
 
         emit TransferSingle(operator, from, to, id, amount);
@@ -237,7 +239,9 @@ contract ERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI {
                 fromBalance >= amount,
                 "ERC1155: insufficient balance for transfer"
             );
-            _balances[id][from] = fromBalance - amount;
+            unchecked {
+                _balances[id][from] = fromBalance - amount;
+            }
             _balances[id][to] += amount;
         }
 
@@ -384,7 +388,9 @@ contract ERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI {
 
         uint256 fromBalance = _balances[id][from];
         require(fromBalance >= amount, "ERC1155: burn amount exceeds balance");
-        _balances[id][from] = fromBalance - amount;
+        unchecked {
+            _balances[id][from] = fromBalance - amount;
+        }
 
         emit TransferSingle(operator, from, address(0), id, amount);
 
@@ -424,7 +430,9 @@ contract ERC1155 is Context, ERC165, IERC1155, IERC1155MetadataURI {
                 fromBalance >= amount,
                 "ERC1155: burn amount exceeds balance"
             );
-            _balances[id][from] = fromBalance - amount;
+            unchecked {
+                _balances[id][from] = fromBalance - amount;
+            }
         }
 
         emit TransferBatch(operator, from, address(0), ids, amounts);

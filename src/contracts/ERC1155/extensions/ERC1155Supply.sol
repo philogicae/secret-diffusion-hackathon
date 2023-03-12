@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts (last updated v4.6.0) (token/ERC1155/extensions/ERC1155Supply.sol)
 
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.0;
 
 import "../ERC1155.sol";
 
@@ -58,7 +58,9 @@ abstract contract ERC1155Supply is ERC1155 {
                     supply >= amount,
                     "ERC1155: burn amount exceeds totalSupply"
                 );
-                _totalSupply[id] = supply - amount;
+                unchecked {
+                    _totalSupply[id] = supply - amount;
+                }
             }
         }
     }
