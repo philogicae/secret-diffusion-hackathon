@@ -301,8 +301,10 @@ contract SFT is Context, ERC165, IERC1155, IERC1155MetadataURI {
         );
 
         // Create SecretBoxes
-        mapping(uint256 => SecretBox) creatorBoxes = new mapping(uint256 => SecretBox)();
-        mapping(uint256 => SecretBox) boxes = new mapping(uint256 => SecretBox)();
+        mapping(uint256 => SecretBox)
+            storage creatorBoxes = new mapping(uint256 => SecretBox)();
+        mapping(uint256 => SecretBox)
+            storage boxes = new mapping(uint256 => SecretBox)();
         SecretBox storage first = new SecretBox(0, creator, true);
         creatorBoxes[0] = first;
         boxes[0] = first;
@@ -315,7 +317,8 @@ contract SFT is Context, ERC165, IERC1155, IERC1155MetadataURI {
         // Create SecretHolder
         SecretHolder storage holder = new SecretHolder(amount, creatorBoxes);
         // Create SecretHolders
-        mapping(address => SecretHolder) holders = new mapping(address => SecretHolder)();
+        mapping(address => SecretHolder)
+            storage holders = new mapping(address => SecretHolder)();
         holders[creator] = holder;
 
         // Create Secret
