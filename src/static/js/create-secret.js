@@ -50,25 +50,23 @@ function handleSDUrl() {
     console.log("Please enter a valid StableDiffusion instance URL.");
   }
 }
-
 function handleSecret() {
+  if (hasPrompt && inputPrompt.length == 0 && secretInput.value == "") {
+    return;
+  }
   secret = secretInput.value;
-  if (secret.length > 0) {
-    hasSecret = true;
-  }
-
-  if (hasSecret) {
-    console.log(`Secret is: ${secret}`);
-    secretInput.disabled = true;
-    secretBtn.innerHTML = '<i class="fas fa-check"></i> Secret saved';
-    secretBtn.classList.add("success");
-    enableGenerateImageBtn();
-  } else {
-    console.log("Please enter a valid secret.");
-  }
+  hasSecret = true;
+  console.log(`Secret is: ${secret}`);
+  secretInput.disabled = true;
+  secretBtn.innerHTML = '<i class="fas fa-check"></i> Secret saved';
+  secretBtn.classList.add("success");
+  enableGenerateImageBtn();
 }
 
 function handlePrompt() {
+  if (hasSecret && secret.length == 0 && promptInput.value == "") {
+    return;
+  }
   inputPrompt = promptInput.value;
   hasPrompt = true;
   console.log(`Prompt is: ${inputPrompt}`);
@@ -98,19 +96,21 @@ function handleGenerateImage() {
   spinner.style.display = "block";
   fetch(
     "/generate-image?stableDiffusionLink=" +
-      stableDiffusionLink +
-      "&secret=" +
-      secret +
-      "&prompt=" +
-      inputPrompt +
-      "&amount=" +
-      amount
+    stableDiffusionLink +
+    "&secret=" +
+    secret +
+    "&prompt=" +
+    inputPrompt +
+    "&amount=" +
+    amount
   ).then(
     (response) => {
       img = new Image();
       img.src = response.value;
       document.body.appendChild(img);
       spinner.style.display = "none";
+      let mintContainerElement = document.getElementById("mint-container");
+      mintContainerElement.style.visibility = "visible";
     },
     () => {
       spinner.style.display = "none";
