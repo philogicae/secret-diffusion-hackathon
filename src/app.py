@@ -25,6 +25,7 @@ def generate_image():
     print('Formatting prompt...')
     formatted_prompt = api.parse_prompt(prompt);
     print('Generating image...')
+    print(formatted_prompt)
     api.generate(formatted_prompt)
     return "Image generated successfully."
 
