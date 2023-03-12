@@ -95,14 +95,19 @@ function handleAmount() {
 
 function handleGenerateImage() {
     // Your generate image code goes here
+    document.getElementById("spinner").style.display = "block";
     fetch('/generate-image?stableDiffusionLink=' + stableDiffusionLink + '&secret=' + secret + '&prompt=' + inputPrompt + '&amount=' + amount)
         .then(response => {
             if (response.ok) {
                 console.log(response);
                 return response;
             } else {
+                document.getElementById("spinner").style.display = "none";
                 throw new Error('Error generating image.');
             }
+        })
+        .then(() => {
+            document.getElementById("spinner").style.display = "none";
         });
 }
 
