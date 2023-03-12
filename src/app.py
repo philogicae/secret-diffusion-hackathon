@@ -1,7 +1,4 @@
-import io
-from PIL import Image
-from flask import Flask, make_response, render_template, request
-
+from flask import Flask, render_template, request
 from sd_api import SD_API
 
 app = Flask(__name__)
@@ -30,15 +27,8 @@ def generate_image():
     print('Formatting prompt...')
     formatted_prompt = api.parse_prompt(prompt)
     print('Generating image...')
-    print(formatted_prompt)
+    return api.generate(formatted_prompt)[0]['img']
 
-    genImage_data = api.generate(formatted_prompt)[0]
-    img = genImage_data['img']  # Extract the Image object from the dictionary
-    img_data = io.BytesIO()
-    img.save(img_data, format='JPEG')
-    response = make_response(img_data.getvalue())
-    response.headers['Content-Type'] = 'image/jpeg'
-    return response
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)
