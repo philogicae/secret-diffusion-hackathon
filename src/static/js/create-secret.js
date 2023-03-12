@@ -1,19 +1,24 @@
 let connected = false;
 let stableDiffusionLink = "";
 let secret = "";
-let prompt = ""
+let inputPrompt = "";
+let amount = 1;
 
 let hasStableDiffusionLink = false;
 let hasSecret = false;
 let hasPrompt = false;
+let hasAmount = false;
 
 const walletAddress = document.getElementById("walletAddress");
 let sdUrlInput = document.getElementById("sd-url-input");
 let secretInput = document.getElementById("secret-input");
 let promptInput = document.getElementById("prompt-input");
+let amountInput = document.getElementById("amount-input");
 let sdBtn = document.getElementById("sd-btn");
 let secretBtn = document.getElementById("secret-btn");
 let promptBtn = document.getElementById("prompt-btn");
+let amountBtn = document.getElementById("amount-btn");
+let numberNftBtn = document.getElementById("number-nft-btn");
 
 let generateImageBtn = document.getElementById("generate-image-btn");
 generateImageBtn.disabled = true; // disable the button initially
@@ -63,26 +68,58 @@ function handleSecret() {
 }
 
 function handlePrompt() {
-    prompt = promptInput.value;
+    inputPrompt = promptInput.value;
     hasPrompt = true;
-    console.log(`Prompt is: ${prompt}`);
+    console.log(`Prompt is: ${inputPrompt}`);
     promptInput.disabled = true;
     promptBtn.innerHTML = '<i class="fas fa-check"></i> Prompt saved';
     promptBtn.classList.add("success");
     enableGenerateImageBtn();
 }
 
+function handleAmount() {
+    let strAmount = amountInput.value;
+    if (strAmount == NaN || strAmount == "") {
+        strAmount = 0;
+    }
+    let intAmount = parseInt(strAmount);
+    amount = intAmount + 1;
+    hasAmount = true;
+    console.log(`Amount is: ${amount}`);
+    amountInput.disabled = true;
+    amountBtn.innerHTML = '<i class="fas fa-check"></i> Amount saved';
+    amountBtn.classList.add("success");
+    enableGenerateImageBtn();
+}
+
+
 function handleGenerateImage() {
     // Your generate image code goes here
+    fetch('/generate-image?stableDiffusionLink=' + stableDiffusionLink + '&secret=' + secret + '&prompt=' + inputPrompt + '&amount=' + amount)
+        .then(response => {
+            if (response.ok) {
+                console.log(response);
+                return response.json();
+            } else {
+                throw new Error('Error generating image.');
+            }
+        })
+        .then(data => {
+            console.log(data);
+            // handle the response data here
+        })
+        .catch(error => {
+            console.error('Error generating image:', error);
+        });
 }
 
 function enableGenerateImageBtn() {
-    if (hasStableDiffusionLink && hasSecret && hasPrompt) {
+    if (hasStableDiffusionLink && hasSecret && hasPrompt && hasAmount) {
         generateImageBtn.disabled = false; // enable the button
         generateImageBtn.innerHTML = "Generate AI Image"; // Set the button text
     } else {
         generateImageBtn.disabled = true; // disable the button
-        generateImageBtn.innerHTML = "Please submit all required inputs"; // Set the button text
+        generateImageBtn.innerHTML = "Please fill in all inputs"; // Set the button text
     }
 }
 
