@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.7.8;
 
 import "./ERC1155/IERC1155.sol";
 import "./ERC1155/IERC1155Receiver.sol";
@@ -28,6 +28,7 @@ contract SFT is Context, ERC165, IERC1155, IERC1155MetadataURI {
         uint256 id;
         address creator;
         uint256 supply; // number of NFTs
+        uint256 metadata; // ipfs link
         uint256 metahash; // sha256 of secretId, creator, supply, and metadata
         mapping(uint256 => SecretBox) boxes; // map of NFT ids to boxes
         mapping(address => SecretHolder) holders; // map of NFT holders
@@ -38,16 +39,28 @@ contract SFT is Context, ERC165, IERC1155, IERC1155MetadataURI {
     uint256 private _numSecrets; // numbers of secrets
     string private _uri;
 
-    constructor(string memory uri_) {
-        _setURI(uri_);
-    }
+    event SecretMinted(
+        address indexed secretId,
+        uint256 indexed creator,
+        uint256 amount,
+        uint256 metahash
+    );
 
-    function uri(uint256) public view override returns (string memory) {
-        return _uri;
-    }
+    event SecretOpened(
+        address indexed secretId,
+        uint256 indexed from,
+        uint256 boxId,
+        uint256 metahash
+    );
 
-    function _setURI(string memory newuri) internal {
-        _uri = newuri;
+    constructor() {}
+
+    function uri(uint256 id) public view override returns (string memory) {
+        uint256 id_ = _metahashs[id];
+        if (id_ == 0) {
+            id_ = id;
+        }
+        return _secrets[id_].metadata;
     }
 
     function supportsInterface(
@@ -63,8 +76,11 @@ contract SFT is Context, ERC165, IERC1155, IERC1155MetadataURI {
         address account,
         uint256 id
     ) public view override returns (uint256) {
-        uint256 id_;
-        return _secrets[_metahashs(id) || id].holders[account].balance;
+        uint256 id_ = _metahashs[id];
+        if (id_ == 0) {
+            id_ = id;
+        }
+        return _secrets[id_].holders[account].balance;
     }
 
     function balanceOfBatch(
@@ -77,9 +93,11 @@ contract SFT is Context, ERC165, IERC1155, IERC1155MetadataURI {
         );
         uint256[] memory batchBalances = new uint256[](accounts.length);
         for (uint256 i = 0; i < accounts.length; i++) {
-            batchBalances[i] = _secrets[_metahashs(ids[i]) || ids[i]]
-                .holders[accounts[i]]
-                .balance;
+            uint256 id_ = _metahashs[ids[i]];
+            if (id_ == 0) {
+                id_ = ids[i];
+            }
+            batchBalances[i] = _secrets[id_].holders[accounts[i]].balance;
         }
         return batchBalances;
     }
@@ -131,7 +149,11 @@ contract SFT is Context, ERC165, IERC1155, IERC1155MetadataURI {
     ) internal {
         require(to != address(0), "ERC1155: transfer to the zero address");
         address operator = _msgSender();
-        Secret memory secret = _secrets[_metahashs[id] || id];
+        uint256 id_ = _metahashs[id];
+        if (id_ == 0) {
+            id_ = id;
+        }
+        Secret memory secret = _secrets[id_];
         SecretHolder memory fromHolder = secret.holders[from];
         if (secret.holders[to].balance == 0) {
             secret.holders[to] = SecretHolder(
@@ -270,19 +292,72 @@ contract SFT is Context, ERC165, IERC1155, IERC1155MetadataURI {
         }
     }
 
-    function mint(
-        address to,
-        uint256 id,
-        uint256 amount,
-        bytes memory data
-    ) internal virtual {
-        require(to != address(0), "ERC1155: mint to the zero address");
-        require(to == _msgSender(), "ERC1155: only msg.sender can mint");
+    function mint(uint256 amount, string memory metadata) external {
         require(amount > 0, "ERC1155: amount must be positive");
+        address creator = _msgSender()
+        uint256 id = _numSecrets;
+        uint256 metahash = uint256(
+            sha256(
+                abi.encodePacked(id, creator, amount, metadata)
+            )
+        );
 
-        // TODO
+        // Create SecretBoxes
+        mapping(uint256 => SecretBox) creatorBoxes = new mapping(uint256 => SecretBox)();
+        mapping(uint256 => SecretBox) boxes = new mapping(uint256 => SecretBox)();
+        SecretBox storage first = new SecretBox(0, creator, true)
+        creatorBoxes[0] = first;
+        boxes[0] = first;
+        for (uint256 i = 1; i < amount; i++) {
+            SecretBox storage next = new SecretBox(i, creator, false)
+            creatorBoxes[i] = next;
+            boxes[i] = next;
+        }
+    
+        // Create SecretHolder
+        SecretHolder storage holder = new SecretHolder(amount, creatorBoxes);
+        // Create SecretHolders
+        mapping(address => SecretHolder) holders = new mapping(address => SecretHolder)();
+        holders[creator] = holder
 
-        emit TransferSingle(to, address(0), to, id, amount);
-        _doSafeTransferAcceptanceCheck(to, address(0), to, id, amount, data);
+        // Create Secret
+        Secret storage secret = new Secret(
+            id,
+            creator,
+            amount,
+            metadata,
+            metahash,
+            boxes,
+            holders
+        );
+
+        // Add to maps
+        _metahashs[metahash] = id;
+        _secrets[id] = secret;
+        _numSecrets++;
+
+        emit SecretMinted(id, creator, amount, metahash);
+    }
+
+    function open(uint256 secretId, uint256 boxId) external {
+        address sender = _msgSender();
+        uint256 id_ = _metahashs[secretId];
+        if (id_ == 0) {
+            id_ = secretId;
+        }
+        SecretBox secretBox = _secrets[id_].boxes[boxId];
+        require(secretBox == sender, "ERC1155: caller is not the holder");
+        require(secretBox.revealed == false, "ERC1155: box already opened");
+        secretBox.revealed = true;
+        emit SecretOpened(secretId, from, boxId, metahash);
+    }
+
+    function isOpen(uint256 secretId, uint256 boxId) public view returns (bool) {
+        uint256 id_ = _metahashs[secretId];
+        if (id_ == 0) {
+            id_ = secretId;
+        }
+        SecretBox secretBox = _secrets[id_].boxes[boxId];
+        return secretBox.revealed;
     }
 }
