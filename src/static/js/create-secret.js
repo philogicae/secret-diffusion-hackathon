@@ -105,19 +105,18 @@ function handleGenerateImage() {
       inputPrompt +
       "&amount=" +
       amount
-  )
-    .then((response) => {
-      if (response.ok) {
-        console.log(response);
-        generatedImageElement.src = `data:image/jpeg;base64,${response.value}`;
-        document.body.appendChild(generatedImageElement);
-        return response;
-      } else {
-        throw new Error("Error generating image.");
-      }    })
-    .then(() => {
+  ).then(
+    (response) => {
+      img = new Image();
+      img.src = response.value;
+      document.body.appendChild(img);
       spinner.style.display = "none";
-    });
+    },
+    () => {
+      spinner.style.display = "none";
+      throw new Error("Error generating image.");
+    }
+  );
 }
 
 function enableGenerateImageBtn() {

@@ -27,7 +27,8 @@ def generate_image():
     print('Formatting prompt...')
     formatted_prompt = api.parse_prompt(prompt)
     print('Generating image...')
-    return api.generate(formatted_prompt)[0]['img']
+    img, _ = api.generate(formatted_prompt)
+    return "static/images/" + img
 
 
 if __name__ == '__main__':

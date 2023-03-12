@@ -10,7 +10,7 @@ packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
 
 class SD_API:
-    OUTPUT_DIR = "src/output"
+    OUTPUT_DIR = "src/static/images"
     RANDOM_WORD_LIST = ["Paris", "Cat", "Ballerina",
                         "Hackathon Winner", "Dog", "Trophy", "Bucharest"]
     DEFAULT_PROMPT = dict(
@@ -65,21 +65,16 @@ class SD_API:
         print("Auto-parsed prompt:", prompt_dict)
         return prompt_dict
 
-    def generate(self, prompt_data=DEFAULT_PROMPT):
-        prompt = self.DEFAULT_PROMPT | prompt_data
-        resp = self._call(self.txt2img, prompt)
-        imgs = []
-        for i, data in enumerate(resp['images']):
-            img = Image.open(BytesIO(b64decode(data.split(",", 1)[0])))
-            img.save(f'{self.OUTPUT_DIR}/img-{i+1}.jpg')
-            metadata = self.metadata(
-                data, header=f"{i+1}/{len(resp['images'])}:")
-            imgs.append(dict(img=img, prompt=metadata))
-        return imgs  # [ {'img': img, 'prompt': metadata}, ... ]
-
-    def metadata(self, data, header=''):
+    def metadata(self, data):
         png_payload = dict(image="data:image/png;base64," + data)
         resp = self._call(self.png_info, png_payload)
         metadata = resp.get("info")
-        print(header, metadata)
+        print(metadata)
         return metadata
+
+    def generate(self, prompt_data=DEFAULT_PROMPT):
+        prompt = self.DEFAULT_PROMPT | prompt_data
+        data = self._call(self.txt2img, prompt)['images'][0]
+        img = Image.open(BytesIO(b64decode(data.split(",", 1)[0])))
+        img.save(f'{self.OUTPUT_DIR}/img.jpg')
+        return 'img.jpg', self.metadata(data)

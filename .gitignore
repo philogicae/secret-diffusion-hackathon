@@ -1,3 +1,4 @@
 src/__pycache__
 src/output/*
 .env
+src/static/images
