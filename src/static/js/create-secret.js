@@ -22,11 +22,8 @@ let promptBtn = document.getElementById("prompt-btn");
 let amountBtn = document.getElementById("amount-btn");
 let numberNftBtn = document.getElementById("number-nft-btn");
 
-let generateImageBtn = document.getElementById("generate-image-btn");
-generateImageBtn.disabled = true; // disable the button initially
-
-const generatedImageElement = document.getElementById("generated-image");
-
+let mintBtn = document.getElementById("mint-btn");
+mintBtn.disabled = true; // disable the button initially
 window.ethereum.request({ method: "eth_requestAccounts" }).then((accounts) => {
   const selectedAccount = accounts[0];
   console.log(selectedAccount);
@@ -45,7 +42,7 @@ function handleSDUrl() {
     sdUrlInput.disabled = true;
     sdBtn.innerHTML = '<i class="fas fa-check"></i> URL saved';
     sdBtn.classList.add("success");
-    enableGenerateImageBtn();
+    enableMintBtn();
   } else {
     console.log("Please enter a valid StableDiffusion instance URL.");
   }
@@ -60,7 +57,7 @@ function handleSecret() {
   secretInput.disabled = true;
   secretBtn.innerHTML = '<i class="fas fa-check"></i> Secret saved';
   secretBtn.classList.add("success");
-  enableGenerateImageBtn();
+  enableMintBtn();
 }
 
 function handlePrompt() {
@@ -73,7 +70,7 @@ function handlePrompt() {
   promptInput.disabled = true;
   promptBtn.innerHTML = '<i class="fas fa-check"></i> Prompt saved';
   promptBtn.classList.add("success");
-  enableGenerateImageBtn();
+  enableMintBtn();
 }
 
 function handleAmount() {
@@ -88,10 +85,10 @@ function handleAmount() {
   amountInput.disabled = true;
   amountBtn.innerHTML = '<i class="fas fa-check"></i> Amount saved';
   amountBtn.classList.add("success");
-  enableGenerateImageBtn();
+  enableMintBtn();
 }
 
-function handleGenerateImage() {
+function handleMint() {
   let spinner = document.getElementById("spinner");
   spinner.style.display = "block";
   fetch(
@@ -119,18 +116,18 @@ function handleGenerateImage() {
   );
 }
 
-function enableGenerateImageBtn() {
+function enableMintBtn() {
   if (hasStableDiffusionLink && hasSecret && hasPrompt && hasAmount) {
-    generateImageBtn.disabled = false; // enable the button
-    generateImageBtn.innerHTML = "Generate AI Image"; // Set the button text
+    mintBtn.disabled = false; // enable the button
+    mintBtn.innerHTML = "Mint NFTs"; // Set the button text
   } else {
-    generateImageBtn.disabled = true; // disable the button
-    generateImageBtn.innerHTML = "Please fill in all inputs"; // Set the button text
+    mintBtn.disabled = true; // disable the button
+    mintBtn.innerHTML = "Please fill in all inputs"; // Set the button text
   }
 }
 
 // Call the function initially to set the state of the button
-enableGenerateImageBtn();
+enableMintBtn();
 
 if (!connected) {
   walletAddress.textContent =
