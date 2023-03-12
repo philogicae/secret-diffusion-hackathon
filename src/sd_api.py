@@ -76,5 +76,6 @@ class SD_API:
         prompt = self.DEFAULT_PROMPT | prompt_data
         data = self._call(self.txt2img, prompt)['images'][0]
         img = Image.open(BytesIO(b64decode(data.split(",", 1)[0])))
-        img.save(f'{self.OUTPUT_DIR}/img.jpg')
-        return 'img.jpg', self.metadata(data)
+        img_path = f'{self.OUTPUT_DIR}/img.jpg'
+        img.save(img_path)
+        return img_path, self.metadata(data)

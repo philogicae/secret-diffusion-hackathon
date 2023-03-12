@@ -1,18 +1,41 @@
 from cryptography.hazmat.primitives.asymmetric import rsa, padding as asym_padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.primitives import hashes, padding as sym_padding
+from cryptography.hazmat.primitives import hashes, serialization, padding as sym_padding
 from cryptography.hazmat.backends import default_backend
 from secrets import token_bytes
 
 
 class Cryptor:
+    SECRETS_DIR = "src/keys"
+
+    @staticmethod
+    def save_pk(name, pk):
+        with open(f'{Cryptor.SECRETS_DIR}/{name}.txt', 'w') as f:
+            f.write(pk)
+
+    @staticmethod
+    def load_pk(name):
+        with open(f'{Cryptor.SECRETS_DIR}/{name}.txt', 'r') as f:
+            return f.read()
+
     @staticmethod
     def generate_pk():
-        return rsa.generate_private_key(public_exponent=65537, key_size=2048)
+        pk = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+        private_key_pem = pk.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption()
+        )
+        return private_key_pem.decode()
 
     @staticmethod
     def public_key(pk):
-        return pk.public_key()
+        private_key_pem = pk.encode()
+        private_key = serialization.load_pem_private_key(
+            private_key_pem,
+            password=None
+        )
+        return private_key.public_key()
 
     @staticmethod
     def encrypt(pk, message):
@@ -40,7 +63,12 @@ class Cryptor:
             secret[:32]), bytes.fromhex(secret[32:544]), bytes.fromhex(secret[544:])
 
         # Decrypt symmetric key with RSA
-        decrypted_key = pk.decrypt(encrypted_key, asym_padding.OAEP(
+        private_key_pem = pk.encode()
+        private_key = serialization.load_pem_private_key(
+            private_key_pem,
+            password=None
+        )
+        decrypted_key = private_key.decrypt(encrypted_key, asym_padding.OAEP(
             mgf=asym_padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None))
 
         # Decrypt message with symmetric key and iv
@@ -57,5 +85,8 @@ if __name__ == '__main__':
     message = 'Hello, world!'
     pk = Cryptor.generate_pk()
     secret = Cryptor.encrypt(pk, message)
+    Cryptor.save_pk('pk', pk)
+    # Later...
+    pk = Cryptor.load_pk('pk')
     decrypted = Cryptor.decrypt(pk, secret)
     print(f'Message: {message}\nSecret: {secret}\nDecrypted: {decrypted}')

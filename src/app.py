@@ -1,5 +1,8 @@
 from flask import Flask, render_template, request
 from sd_api import SD_API
+from cryptor import Cryptor
+from ipfs_api import IFPS_api
+import json
 
 app = Flask(__name__)
 
@@ -21,14 +24,37 @@ def create_secret():
 
 @app.route('/generate-image')
 def generate_image():
+    # Retrieve data
     stable_diffusion_link = request.args.get('stableDiffusionLink')
+    secret = request.args.get('secret')
     prompt = request.args.get('prompt')
-    api = SD_API(stable_diffusion_link)
+    amount = request.args.get('amount')
+
+    # Prepare prompt
+    sd_api = SD_API(stable_diffusion_link)
     print('Formatting prompt...')
-    formatted_prompt = api.parse_prompt(prompt)
+    formatted_prompt = sd_api.parse_prompt(prompt)
+
+    # Prepare image
     print('Generating image...')
-    img, _ = api.generate(formatted_prompt)
-    return "static/images/" + img
+    img_path, metadata = sd_api.generate(formatted_prompt)
+
+    # Encryption
+    print('Encrypting secret...')
+    pk = Cryptor.generate_pk()
+    to_encrypt = json.dumps(dict(secret=secret, metadata=metadata))
+    encrypted_secret = Cryptor.encrypt(pk, to_encrypt)
+
+    # Post on IPFS
+    print('Posting on IPFS...')
+    ifps = IFPS_api()
+    result = ifps.post('Secret', encrypted_secret, img_path)
+    url = result['metadata']['url']
+
+    # Mint
+
+    # Prepare response
+    Cryptor.save_pk('pk', pk)
 
 
 if __name__ == '__main__':
