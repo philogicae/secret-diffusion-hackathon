@@ -45,13 +45,12 @@ class SD_API:
         word = self.RANDOM_WORD_LIST[seed % len(self.RANDOM_WORD_LIST)]
         new["prompt"] = f"(photography of {word}:1.2), realist, art, 50mm, design, 8k, hdr"
         new['seed'] = seed
-        print(new)
+        print("Auto-generated prompt:", new)
         return new
 
-    def parse_prompt(self, prompt_string):
+    def parse_prompt(self, prompt_string=None):
         if (not prompt_string):
             return self.autoprompt()
-
         prompt_parts = prompt_string.split("\n")
         prompt_dict = dict(prompt=prompt_parts[0])
         if len(prompt_parts) > 1:
@@ -59,16 +58,15 @@ class SD_API:
 
         prompt_dict["width"], prompt_dict["height"] = prompt_parts[-1].split(
             ":")[-1].split("x")
-
         for part in prompt_parts[2:-1]:
             key, val = part.split(":")
             prompt_dict[key.strip().replace(" ", "_").lower()
                         ] = float(val.strip())
-        prompt_dict["n_iter"] = 1
+        print("Auto-parsed prompt:", prompt_dict)
         return prompt_dict
 
-    def generate(self, prompt_data={}, n=1):
-        prompt = self.DEFAULT_PROMPT | prompt_data | dict(n_iter=n)
+    def generate(self, prompt_data=DEFAULT_PROMPT):
+        prompt = self.DEFAULT_PROMPT | prompt_data
         resp = self._call(self.txt2img, prompt)
         for i, data in enumerate(resp['images']):
             img = Image.open(BytesIO(b64decode(data.split(",", 1)[0])))
