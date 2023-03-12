@@ -12,11 +12,7 @@ A secret-nft can be traded or transfered as long as the function reveal has not 
 Once the user opens the secret, the nft becomes not transferable.
 
 
-## Secret generation
-
-// TO DO 
-
-
+## Initial Plan
 Secret:
 1. Simple: Msg + auto prompt v2.1 + extra
 2. Prompt: No msg + custom prompt + extra (ex: custom model)
