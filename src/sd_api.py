@@ -41,7 +41,7 @@ class SD_API:
         resp = self._call(self.txt2img, prompt)
         for i, data in enumerate(resp['images']):
             img = Image.open(BytesIO(b64decode(data.split(",", 1)[0])))
-            img.save(f'{self.OUTPUT_DIR}/img-{i+1}.png')
+            img.save(f'{self.OUTPUT_DIR}/img-{i+1}.jpg')
             self.metadata(data, header=f"{i+1}/{len(resp['images'])}:")
 
     def metadata(self, data, header=''):
