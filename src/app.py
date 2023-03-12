@@ -2,6 +2,7 @@ from flask import Flask, render_template, request
 from sd_api import SD_API
 from cryptor import Cryptor
 from ipfs_api import IFPS_api
+from web3_utils import web3_utils
 import json
 
 app = Flask(__name__)
@@ -50,8 +51,12 @@ def generate_image():
     ifps = IFPS_api()
     result = ifps.post('Secret', encrypted_secret, img_path)
     url = result['metadata']['url']
+    print(url)
 
     # Mint
+    print('Prepare minting...')
+    tx = web3_utils.generate_mint_tx(amount, url)
+    print(tx)
 
     # Prepare response
     Cryptor.save_pk('pk', pk)
