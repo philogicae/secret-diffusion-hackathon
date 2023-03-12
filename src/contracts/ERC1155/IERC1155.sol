@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts v4.4.1 (token/ERC1155/IERC1155.sol)
 
-pragma solidity ^0.7.8;
+pragma solidity ^0.7.6;
 
 import "./dependencies/IERC165.sol";
 
