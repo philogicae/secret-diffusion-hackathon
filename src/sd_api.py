@@ -70,11 +70,12 @@ class SD_API:
         resp = self._call(self.txt2img, prompt)
         imgs=[]
         for i, data in enumerate(resp['images']):
-            img = Image.open(BytesIO(b64decode(data.split(",", 1)[0])))
-            img.save(f'{self.OUTPUT_DIR}/img-{i+1}.jpg')
+            img_data = b64decode(data.split(",", 1)[0])
+            img = Image.open(BytesIO(img_data))
+            img.save(f'{self.OUTPUT_DIR}/img-{i+1}.jpg', 'JPEG')
             metadata = self.metadata(data, header=f"{i+1}/{len(resp['images'])}:")
-            imgs[i] = dict(img=img, prompt=metadata)
-        return imgs # [ {'img': img, 'prompt': metadata}, ... ]
+            imgs.append(dict(img=img, prompt=metadata))
+        return imgs
 
     def metadata(self, data, header=''):
         png_payload = dict(image="data:image/png;base64," + data)

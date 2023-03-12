@@ -25,7 +25,7 @@ let numberNftBtn = document.getElementById("number-nft-btn");
 let generateImageBtn = document.getElementById("generate-image-btn");
 generateImageBtn.disabled = true; // disable the button initially
 
-const imageElement = document.getElementById("myImage");
+const generatedImageElement = document.getElementById("generated-image");
 
 window.ethereum.request({ method: "eth_requestAccounts" }).then((accounts) => {
   const selectedAccount = accounts[0];
@@ -109,11 +109,12 @@ function handleGenerateImage() {
     .then((response) => {
       if (response.ok) {
         console.log(response);
+        generatedImageElement.src = `data:image/jpeg;base64,${response.value}`;
+        document.body.appendChild(generatedImageElement);
         return response;
       } else {
         throw new Error("Error generating image.");
-      }
-    })
+      }    })
     .then(() => {
       spinner.style.display = "none";
     });
